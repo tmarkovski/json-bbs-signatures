@@ -8,22 +8,20 @@
 
 This document explores a proof of concept for potential use of [BBS+ Signatures](https://mattrglobal.github.io/bbs-signatures-spec/) with JSON data.
 
----
-
-#### **Table of contents**
+### Table of contents
 
 - [Motivation](#motivation)
-- [Existing BBS+ Signature scheme for JSON-LD](#existing-bbs--signature-scheme-for-json-ld)
+- [Existing BBS+ Signature scheme for JSON-LD](#existing-bbs-signature-scheme-for-json-ld)
   * [Signatures using JSON-LD canonicalization](#signatures-using-json-ld-canonicalization)
   * [Proof derivation using JSON-LD framing](#proof-derivation-using-json-ld-framing)
-- [BBS+ Signatures for JSON](#bbs--signatures-for-json)
+- [BBS+ Signatures for JSON](#bbs-signatures-for-json)
   * [Normalization using JSON Pointer](#normalization-using-json-pointer)
   * [Object projections using JSON Path](#object-projections-using-json-path)
   * [Proof formats](#proof-formats)
-    + [JOSE signatures (JWS/JWT)](#jose-signatures--jws-jwt-)
+    + [JOSE signatures (JWS/JWT)](#jose-signatures-jwsjwt)
       - [Signature for JSON payload](#signature-for-json-payload)
       - [Signature proof derivation](#signature-proof-derivation)
-      - [Other BBS operations / ZKP](#other-bbs-operations---zkp)
+      - [Other BBS operations / ZKP](#other-bbs-operations--zkp)
     + [Linked Data Proofs](#linked-data-proofs)
     + [Http Signatures](#http-signatures)
 - [Comparison between JSON-LD and JSON approach](#comparison-between-json-ld-and-json-approach)
@@ -31,9 +29,6 @@ This document explores a proof of concept for potential use of [BBS+ Signatures]
   * [Considerations when using Linked Data](#considerations-when-using-linked-data)
   * [VC Data Model Conformance](#vc-data-model-conformance)
   * [Presentation Exchange Compatibility](#presentation-exchange-compatibility)
-
-
----
 
 ## Motivation
 
