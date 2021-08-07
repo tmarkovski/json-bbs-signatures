@@ -1,5 +1,22 @@
 # BBS+ Signatures for JSON data
 
+Signature scheme that allows BBS+ Signatures to be used with JSON objects defined with a JSON Schema.
+
+**Specification Status:** Strawman
+
+**Latest Draft:**
+  [https://tmarkovski.github.io/json-bbs-signatures](https://tmarkovski.github.io/json-bbs-signatures)
+
+Editors:
+~ [Tomislav Markovski](https://www.linkedin.com/in/tmarkovski/)
+
+Participate:
+~ [GitHub repo](https://github.com/tmarkovski/json-bbs-signatures)
+~ [File a bug](https://github.com/tmarkovski/json-bbs-signatures/issues)
+~ [Commit history](https://github.com/tmarkovski/json-bbs-signatures/commits/master)
+
+------------------------------------
+
 This document explores a proof of concept for potential use of [BBS+ Signatures](https://mattrglobal.github.io/bbs-signatures-spec/) with JSON data.
 
 ## Motivation
