@@ -1,0 +1,22 @@
+
+{
+    "specs": [
+      {
+        "title": "BBS+ Signatures with JSON",
+        "spec_directory": "./docs",
+        "output_path": "./",
+        "logo": "json.svg",
+        "logo_link": "https://github.com/tmarkovski/json-bbs-signatures",
+        "source": {
+          "host": "github",
+          "account": "tmarkovski",
+          "repo": "json-bbs-signatures"
+        },
+        "assets": [
+          { "path": "/custom-assets/custom.css" },
+          { "path": "/custom-assets/custom-head.js", "inject": "head" },
+          { "path": "/custom-assets/custom-body.js", "inject": "body" }
+        ]
+      }
+    ]
+  }
