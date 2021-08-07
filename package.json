@@ -1,21 +1,10 @@
 {
-  "name": "json-bbs-signatures",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
   "scripts": {
-    "test": "ava"
+    "edit": "node -e \"require('spec-up')()\"",
+    "render": "node -e \"require('spec-up')({ nowatch: true })\"",
+    "dev": "node -e \"require('spec-up')({ dev: true })\""
   },
-  "author": "Tomislav Markovski",
-  "license": "ISC",
   "dependencies": {
-    "@mattrglobal/bbs-signatures": "^0.6.0",
-    "json8-pointer": "^1.0.4",
-    "jsonpath": "^1.1.1"
-  },
-  "devDependencies": {
-    "@types/jsonpath": "^0.2.0",
-    "@types/node": "^16.3.3",
-    "ava": "^3.15.0"
+    "spec-up": "^0.10.2"
   }
 }
