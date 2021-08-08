@@ -17,7 +17,9 @@ Participate:
 
 ------------------------------------
 
-This document explores a proof of concept for potential use of [BBS+ Signatures](https://mattrglobal.github.io/bbs-signatures-spec/) with JSON data.
+## Abstract
+
+This document explores potential use of [BBS+ Signatures](https://mattrglobal.github.io/bbs-signatures-spec/) with JSON data.
 
 ## Motivation
 
@@ -26,97 +28,25 @@ This document explores a proof of concept for potential use of [BBS+ Signatures]
 - Expand the availability of BBS+ Signatures for all platforms and languages by using widely available tools
 - Explore practical implementation of offline use cases for signature verification
 
-## Existing BBS+ Signature scheme for JSON-LD
+## Signature Scheme
 
-BBS+ Signatures can be used with [linked data signatures](https://w3c-ccg.github.io/ldp-bbs2020/) using JSON-LD format. This approach uses normalization of the JSON-LD document using [RDF dataset normalization algorithm](https://json-ld.github.io/rdf-dataset-canonicalization/spec/).
+A summary of the functional requirements needed to define a signature scheme are given below. Each of this is described in details in the next section.
 
-### Signatures using JSON-LD canonicalization
+<dl>
+  <dt>Normalization algorithm</dt>
+  <dd>deterministicly transform the JSON object into unique addressable statements that unambiguously describe each JSON field</dd>
+  <dt>Selective disclosure support</dt>
+  <dd>apply projections to reduce the JSON object into a subset of the original to satisfy selective disclosure requirements</dd>
+  <dt>Document definition</dt>
+  <dd>object should be described using a standardized vocabulary and schemas</dd>
+  <dt>Standard signature formats</dt>
+  <dd>standardized format of reperesenting the signatures</dd>
+</dl>
 
-To sign a JSON-LD document, it must be normalized using the following steps:
+### Normalization algorithm
 
-*Step 1: Input document*
-
-```json
-{
-  "@context": [
-    "https://schema.org",
-    "https://w3id.org/security/v1"
-  ],
-  "type": "Person",
-  "givenName": "JOHN",
-  "lastName": "SMITH"
-}
-```
-
-This next intermidate step ensures the document is in the correct context.
-
-*Step 2: Compacted input document using JSON-LD compaction algorithm*
-
-```json
-{
-  "@context": "https://w3id.org/security/v1",
-  "type": "http://schema.org/Person",
-  "http://schema.org/givenName": "JOHN",
-  "http://schema.org/lastName": "SMITH"
-}
-```
-
-*Step 3: Normalized document using URDNA2015 algorithm*
-
-```turtle
-_:c14n0 <http://schema.org/givenName> "JOHN" .
-_:c14n0 <http://schema.org/lastName> "SMITH" .
-_:c14n0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> .
-```
-
-The final set of normalized statements is then signed using BBS+ and the signature is produced. This approach requires valid JSON-LD document.
-
-### Proof derivation using JSON-LD framing
-
-To allow selective disclosure of data, JSON-LD provides a way to describe a subset of the document, using the framing alorithm.
-
-*Example JSON-LD frame*
-
-```json
-{
-  "@context": "https://schema.org",
-  "@explicit": true,
-  "givenName": {}
-}
-```
-
-When the original document is framed using the above expression, we get a subset of the document
-
-```json
-{
-  "@context": "https://schema.org",
-  "type": "Person",
-  "givenName": "JOHN"
-}
-```
-
-And it's normalized statements
-
-```
-_:c14n0 <http://schema.org/givenName> "JOHN" .
-_:c14n0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> .
-```
-
-A proof can then be derived using BBS+ proof derivation algorithm by disclosing a subset of the original document.
-
-## BBS+ Signatures for JSON
-
-A summary of the concepts required to define a signature scheme:
-
-- [Normalization](#normalization-using-json-pointer) &mdash; deterministicly transform the JSON object into unique addressable statements that unambiguously describe each JSON field
-- [Object projections](#object-projections-using-json-path) &mdash; apply projections to reduce the JSON object into a subset of the original to satisfy selective disclosure requirements
-- [Proof formats](#proof-formats) &mdash; standardized format of reperesenting the signatures
-
-### Normalization using JSON Pointer
-
-This document explores the use of [JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901) as potential normalization algorithm. The immediate benefit of this approach is that it can be applied to any JSON data and doesn't require LD processing. Document defintions can be described using JSON Schema, instead LD contexts.
-
-JSON Pointer defines a string syntax for identifying a specific value within a JSON document. Each node in the JSON document is uniquely expressed as a string.
+This document explores the use of [JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901) as a normalization algorithm.
+JSON Pointer defines a string syntax for identifying a specific value within a JSON document. Each node in the JSON document is uniquely expressed as a string. It is standardized with [RFC 6901](https://datatracker.ietf.org/doc/html/rfc6901). There are tools and libraries available in all languages.
 
 *Example JSON document of personal address*
 
@@ -143,7 +73,7 @@ Pointer                   Value
 "/firstName"              Jane
 "/lastName"               Doe
 "/age"                    24
-"/address"                <"address" node>
+"/address"                <'address' node>
 "/address/state"          CA
 "/address/postalCode"     394221
 ```
@@ -307,6 +237,86 @@ This approach will require defining a new LD signature suite that describes the 
 #### Http Signatures
 
 It is possible to use [Http Signatures](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12) when working with JSON content. While the spec is somewhat vague on extensibility, there's a clear opportunity for BBS+ Signatures with JSON data to be used with this scheme.
+
+
+
+## Existing BBS+ Signature scheme for JSON-LD
+
+BBS+ Signatures can be used with [linked data signatures](https://w3c-ccg.github.io/ldp-bbs2020/) using JSON-LD format. This approach uses normalization of the JSON-LD document using [RDF dataset normalization algorithm](https://json-ld.github.io/rdf-dataset-canonicalization/spec/).
+
+### Signatures using JSON-LD canonicalization
+
+To sign a JSON-LD document, it must be normalized using the following steps:
+
+*Step 1: Input document*
+
+```json
+{
+  "@context": [
+    "https://schema.org",
+    "https://w3id.org/security/v1"
+  ],
+  "type": "Person",
+  "givenName": "JOHN",
+  "lastName": "SMITH"
+}
+```
+
+This next intermidate step ensures the document is in the correct context.
+
+*Step 2: Compacted input document using JSON-LD compaction algorithm*
+
+```json
+{
+  "@context": "https://w3id.org/security/v1",
+  "type": "http://schema.org/Person",
+  "http://schema.org/givenName": "JOHN",
+  "http://schema.org/lastName": "SMITH"
+}
+```
+
+*Step 3: Normalized document using URDNA2015 algorithm*
+
+```turtle
+_:c14n0 <http://schema.org/givenName> "JOHN" .
+_:c14n0 <http://schema.org/lastName> "SMITH" .
+_:c14n0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> .
+```
+
+The final set of normalized statements is then signed using BBS+ and the signature is produced. This approach requires valid JSON-LD document.
+
+### Proof derivation using JSON-LD framing
+
+To allow selective disclosure of data, JSON-LD provides a way to describe a subset of the document, using the framing alorithm.
+
+*Example JSON-LD frame*
+
+```json
+{
+  "@context": "https://schema.org",
+  "@explicit": true,
+  "givenName": {}
+}
+```
+
+When the original document is framed using the above expression, we get a subset of the document
+
+```json
+{
+  "@context": "https://schema.org",
+  "type": "Person",
+  "givenName": "JOHN"
+}
+```
+
+And it's normalized statements
+
+```
+_:c14n0 <http://schema.org/givenName> "JOHN" .
+_:c14n0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> .
+```
+
+A proof can then be derived using BBS+ proof derivation algorithm by disclosing a subset of the original document.
 
 ## Comparison between JSON-LD and JSON approach
 

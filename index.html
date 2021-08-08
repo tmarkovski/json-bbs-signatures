@@ -61,7 +61,8 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
 <dd><a path-0="github.com"path-1="tmarkovski"path-2="json-bbs-signatures"path-3="commits"path-4="master"href="https://github.com/tmarkovski/json-bbs-signatures/commits/master" >Commit history</a></dd>
 </dl>
 <hr>
-<p>This document explores a proof of concept for potential use of <a path-0="mattrglobal.github.io"path-1="bbs-signatures-spec"path-2=""href="https://mattrglobal.github.io/bbs-signatures-spec/" >BBS+ Signatures</a> with JSON data.</p>
+<h2 id="abstract"><a class="toc-anchor" href="#abstract" >§</a> Abstract</h2>
+<p>This document explores potential use of <a path-0="mattrglobal.github.io"path-1="bbs-signatures-spec"path-2=""href="https://mattrglobal.github.io/bbs-signatures-spec/" >BBS+ Signatures</a> with JSON data.</p>
 <h2 id="motivation"><a class="toc-anchor" href="#motivation" >§</a> Motivation</h2>
 <ul>
 <li>Expand practical applications of BBS+ Signatures with JSON data</li>
@@ -69,67 +70,21 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
 <li>Expand the availability of BBS+ Signatures for all platforms and languages by using widely available tools</li>
 <li>Explore practical implementation of offline use cases for signature verification</li>
 </ul>
-<h2 id="existing-bbs-signature-scheme-for-json-ld"><a class="toc-anchor" href="#existing-bbs-signature-scheme-for-json-ld" >§</a> Existing BBS+ Signature scheme for JSON-LD</h2>
-<p>BBS+ Signatures can be used with <a path-0="w3c-ccg.github.io"path-1="ldp-bbs2020"path-2=""href="https://w3c-ccg.github.io/ldp-bbs2020/" >linked data signatures</a> using JSON-LD format. This approach uses normalization of the JSON-LD document using <a path-0="json-ld.github.io"path-1="rdf-dataset-canonicalization"path-2="spec"path-3=""href="https://json-ld.github.io/rdf-dataset-canonicalization/spec/" >RDF dataset normalization algorithm</a>.</p>
-<h3 id="signatures-using-json-ld-canonicalization"><a class="toc-anchor" href="#signatures-using-json-ld-canonicalization" >§</a> Signatures using JSON-LD canonicalization</h3>
-<p>To sign a JSON-LD document, it must be normalized using the following steps:</p>
-<p><em>Step 1: Input document</em></p>
-<pre class="language-json"><code class="language-json"><span class="token punctuation">{</span>
-  <span class="token property">"@context"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
-    <span class="token string">"https://schema.org"</span><span class="token punctuation">,</span>
-    <span class="token string">"https://w3id.org/security/v1"</span>
-  <span class="token punctuation">]</span><span class="token punctuation">,</span>
-  <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"Person"</span><span class="token punctuation">,</span>
-  <span class="token property">"givenName"</span><span class="token operator">:</span> <span class="token string">"JOHN"</span><span class="token punctuation">,</span>
-  <span class="token property">"lastName"</span><span class="token operator">:</span> <span class="token string">"SMITH"</span>
-<span class="token punctuation">}</span>
-</code></pre>
-<p>This next intermidate step ensures the document is in the correct context.</p>
-<p><em>Step 2: Compacted input document using JSON-LD compaction algorithm</em></p>
-<pre class="language-json"><code class="language-json"><span class="token punctuation">{</span>
-  <span class="token property">"@context"</span><span class="token operator">:</span> <span class="token string">"https://w3id.org/security/v1"</span><span class="token punctuation">,</span>
-  <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"http://schema.org/Person"</span><span class="token punctuation">,</span>
-  <span class="token property">"http://schema.org/givenName"</span><span class="token operator">:</span> <span class="token string">"JOHN"</span><span class="token punctuation">,</span>
-  <span class="token property">"http://schema.org/lastName"</span><span class="token operator">:</span> <span class="token string">"SMITH"</span>
-<span class="token punctuation">}</span>
-</code></pre>
-<p><em>Step 3: Normalized document using URDNA2015 algorithm</em></p>
-<pre class="language-turtle"><code class="language-turtle"><span class="token function"><span class="token prefix">_<span class="token punctuation">:</span></span><span class="token local-name">c14n0</span></span> <span class="token url"><span class="token punctuation">&lt;</span>http://schema.org/givenName<span class="token punctuation">></span></span> <span class="token string">"JOHN"</span> <span class="token punctuation">.</span>
-<span class="token function"><span class="token prefix">_<span class="token punctuation">:</span></span><span class="token local-name">c14n0</span></span> <span class="token url"><span class="token punctuation">&lt;</span>http://schema.org/lastName<span class="token punctuation">></span></span> <span class="token string">"SMITH"</span> <span class="token punctuation">.</span>
-<span class="token function"><span class="token prefix">_<span class="token punctuation">:</span></span><span class="token local-name">c14n0</span></span> <span class="token url"><span class="token punctuation">&lt;</span>http://www.w3.org/1999/02/22-rdf-syntax-ns#type<span class="token punctuation">></span></span> <span class="token url"><span class="token punctuation">&lt;</span>http://schema.org/Person<span class="token punctuation">></span></span> <span class="token punctuation">.</span>
-</code></pre>
-<p>The final set of normalized statements is then signed using BBS+ and the signature is produced. This approach requires valid JSON-LD document.</p>
-<h3 id="proof-derivation-using-json-ld-framing"><a class="toc-anchor" href="#proof-derivation-using-json-ld-framing" >§</a> Proof derivation using JSON-LD framing</h3>
-<p>To allow selective disclosure of data, JSON-LD provides a way to describe a subset of the document, using the framing alorithm.</p>
-<p><em>Example JSON-LD frame</em></p>
-<pre class="language-json"><code class="language-json"><span class="token punctuation">{</span>
-  <span class="token property">"@context"</span><span class="token operator">:</span> <span class="token string">"https://schema.org"</span><span class="token punctuation">,</span>
-  <span class="token property">"@explicit"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
-  <span class="token property">"givenName"</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
-<span class="token punctuation">}</span>
-</code></pre>
-<p>When the original document is framed using the above expression, we get a subset of the document</p>
-<pre class="language-json"><code class="language-json"><span class="token punctuation">{</span>
-  <span class="token property">"@context"</span><span class="token operator">:</span> <span class="token string">"https://schema.org"</span><span class="token punctuation">,</span>
-  <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"Person"</span><span class="token punctuation">,</span>
-  <span class="token property">"givenName"</span><span class="token operator">:</span> <span class="token string">"JOHN"</span>
-<span class="token punctuation">}</span>
-</code></pre>
-<p>And it’s normalized statements</p>
-<pre><code>_:c14n0 &lt;http://schema.org/givenName&gt; &quot;JOHN&quot; .
-_:c14n0 &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#type&gt; &lt;http://schema.org/Person&gt; .
-</code></pre>
-<p>A proof can then be derived using BBS+ proof derivation algorithm by disclosing a subset of the original document.</p>
-<h2 id="bbs-signatures-for-json"><a class="toc-anchor" href="#bbs-signatures-for-json" >§</a> BBS+ Signatures for JSON</h2>
-<p>A summary of the concepts required to define a signature scheme:</p>
-<ul>
-<li><a href="#normalization-using-json-pointer" >Normalization</a> — deterministicly transform the JSON object into unique addressable statements that unambiguously describe each JSON field</li>
-<li><a href="#object-projections-using-json-path" >Object projections</a> — apply projections to reduce the JSON object into a subset of the original to satisfy selective disclosure requirements</li>
-<li><a href="#proof-formats" >Proof formats</a> — standardized format of reperesenting the signatures</li>
-</ul>
-<h3 id="normalization-using-json-pointer"><a class="toc-anchor" href="#normalization-using-json-pointer" >§</a> Normalization using JSON Pointer</h3>
-<p>This document explores the use of <a path-0="datatracker.ietf.org"path-1="doc"path-2="html"path-3="rfc6901"href="https://datatracker.ietf.org/doc/html/rfc6901" >JSON Pointer</a> as potential normalization algorithm. The immediate benefit of this approach is that it can be applied to any JSON data and doesn’t require LD processing. Document defintions can be described using JSON Schema, instead LD contexts.</p>
-<p>JSON Pointer defines a string syntax for identifying a specific value within a JSON document. Each node in the JSON document is uniquely expressed as a string.</p>
+<h2 id="signature-scheme"><a class="toc-anchor" href="#signature-scheme" >§</a> Signature Scheme</h2>
+<p>A summary of the functional requirements needed to define a signature scheme are given below. Each of this is described in details in the next section.</p>
+<dl>
+  <dt>Normalization algorithm</dt>
+  <dd>deterministicly transform the JSON object into unique addressable statements that unambiguously describe each JSON field</dd>
+  <dt>Selective disclosure support</dt>
+  <dd>apply projections to reduce the JSON object into a subset of the original to satisfy selective disclosure requirements</dd>
+  <dt>Document definition</dt>
+  <dd>object should be described using a standardized vocabulary and schemas</dd>
+  <dt>Standard signature formats</dt>
+  <dd>standardized format of reperesenting the signatures</dd>
+</dl>
+<h3 id="normalization-algorithm"><a class="toc-anchor" href="#normalization-algorithm" >§</a> Normalization algorithm</h3>
+<p>This document explores the use of <a path-0="datatracker.ietf.org"path-1="doc"path-2="html"path-3="rfc6901"href="https://datatracker.ietf.org/doc/html/rfc6901" >JSON Pointer</a> as a normalization algorithm.
+JSON Pointer defines a string syntax for identifying a specific value within a JSON document. Each node in the JSON document is uniquely expressed as a string. It is standardized with <a path-0="datatracker.ietf.org"path-1="doc"path-2="html"path-3="rfc6901"href="https://datatracker.ietf.org/doc/html/rfc6901" >RFC 6901</a>. There are tools and libraries available in all languages.</p>
 <p><em>Example JSON document of personal address</em></p>
 <pre class="language-json"><code class="language-json"><span class="token punctuation">{</span>
   <span class="token property">"firstName"</span><span class="token operator">:</span> <span class="token string">"Jane"</span><span class="token punctuation">,</span>
@@ -149,7 +104,7 @@ _:c14n0 &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#type&gt; &lt;http://schem
 <span class="token string">"/firstName"</span>              Jane
 <span class="token string">"/lastName"</span>               Doe
 <span class="token string">"/age"</span>                    <span class="token number">24</span>
-<span class="token string">"/address"</span>                <span class="token operator">&lt;</span><span class="token string">"address"</span> node<span class="token operator">></span>
+<span class="token string">"/address"</span>                <span class="token operator">&lt;</span><span class="token string">'address'</span> node<span class="token operator">></span>
 <span class="token string">"/address/state"</span>          CA
 <span class="token string">"/address/postalCode"</span>     <span class="token number">394221</span>
 </code></pre>
@@ -266,6 +221,57 @@ Implementations must understand the <code>&quot;alg&quot;</code> value specifyin
 <p>This approach will require defining a new LD signature suite that describes the normalization algorithm and proof construction methods used.</p>
 <h4 id="http-signatures"><a class="toc-anchor" href="#http-signatures" >§</a> Http Signatures</h4>
 <p>It is possible to use <a path-0="datatracker.ietf.org"path-1="doc"path-2="html"path-3="draft-cavage-http-signatures-12"href="https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12" >Http Signatures</a> when working with JSON content. While the spec is somewhat vague on extensibility, there’s a clear opportunity for BBS+ Signatures with JSON data to be used with this scheme.</p>
+<h2 id="existing-bbs-signature-scheme-for-json-ld"><a class="toc-anchor" href="#existing-bbs-signature-scheme-for-json-ld" >§</a> Existing BBS+ Signature scheme for JSON-LD</h2>
+<p>BBS+ Signatures can be used with <a path-0="w3c-ccg.github.io"path-1="ldp-bbs2020"path-2=""href="https://w3c-ccg.github.io/ldp-bbs2020/" >linked data signatures</a> using JSON-LD format. This approach uses normalization of the JSON-LD document using <a path-0="json-ld.github.io"path-1="rdf-dataset-canonicalization"path-2="spec"path-3=""href="https://json-ld.github.io/rdf-dataset-canonicalization/spec/" >RDF dataset normalization algorithm</a>.</p>
+<h3 id="signatures-using-json-ld-canonicalization"><a class="toc-anchor" href="#signatures-using-json-ld-canonicalization" >§</a> Signatures using JSON-LD canonicalization</h3>
+<p>To sign a JSON-LD document, it must be normalized using the following steps:</p>
+<p><em>Step 1: Input document</em></p>
+<pre class="language-json"><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">"@context"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+    <span class="token string">"https://schema.org"</span><span class="token punctuation">,</span>
+    <span class="token string">"https://w3id.org/security/v1"</span>
+  <span class="token punctuation">]</span><span class="token punctuation">,</span>
+  <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"Person"</span><span class="token punctuation">,</span>
+  <span class="token property">"givenName"</span><span class="token operator">:</span> <span class="token string">"JOHN"</span><span class="token punctuation">,</span>
+  <span class="token property">"lastName"</span><span class="token operator">:</span> <span class="token string">"SMITH"</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>This next intermidate step ensures the document is in the correct context.</p>
+<p><em>Step 2: Compacted input document using JSON-LD compaction algorithm</em></p>
+<pre class="language-json"><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">"@context"</span><span class="token operator">:</span> <span class="token string">"https://w3id.org/security/v1"</span><span class="token punctuation">,</span>
+  <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"http://schema.org/Person"</span><span class="token punctuation">,</span>
+  <span class="token property">"http://schema.org/givenName"</span><span class="token operator">:</span> <span class="token string">"JOHN"</span><span class="token punctuation">,</span>
+  <span class="token property">"http://schema.org/lastName"</span><span class="token operator">:</span> <span class="token string">"SMITH"</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p><em>Step 3: Normalized document using URDNA2015 algorithm</em></p>
+<pre class="language-turtle"><code class="language-turtle"><span class="token function"><span class="token prefix">_<span class="token punctuation">:</span></span><span class="token local-name">c14n0</span></span> <span class="token url"><span class="token punctuation">&lt;</span>http://schema.org/givenName<span class="token punctuation">></span></span> <span class="token string">"JOHN"</span> <span class="token punctuation">.</span>
+<span class="token function"><span class="token prefix">_<span class="token punctuation">:</span></span><span class="token local-name">c14n0</span></span> <span class="token url"><span class="token punctuation">&lt;</span>http://schema.org/lastName<span class="token punctuation">></span></span> <span class="token string">"SMITH"</span> <span class="token punctuation">.</span>
+<span class="token function"><span class="token prefix">_<span class="token punctuation">:</span></span><span class="token local-name">c14n0</span></span> <span class="token url"><span class="token punctuation">&lt;</span>http://www.w3.org/1999/02/22-rdf-syntax-ns#type<span class="token punctuation">></span></span> <span class="token url"><span class="token punctuation">&lt;</span>http://schema.org/Person<span class="token punctuation">></span></span> <span class="token punctuation">.</span>
+</code></pre>
+<p>The final set of normalized statements is then signed using BBS+ and the signature is produced. This approach requires valid JSON-LD document.</p>
+<h3 id="proof-derivation-using-json-ld-framing"><a class="toc-anchor" href="#proof-derivation-using-json-ld-framing" >§</a> Proof derivation using JSON-LD framing</h3>
+<p>To allow selective disclosure of data, JSON-LD provides a way to describe a subset of the document, using the framing alorithm.</p>
+<p><em>Example JSON-LD frame</em></p>
+<pre class="language-json"><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">"@context"</span><span class="token operator">:</span> <span class="token string">"https://schema.org"</span><span class="token punctuation">,</span>
+  <span class="token property">"@explicit"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+  <span class="token property">"givenName"</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>When the original document is framed using the above expression, we get a subset of the document</p>
+<pre class="language-json"><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">"@context"</span><span class="token operator">:</span> <span class="token string">"https://schema.org"</span><span class="token punctuation">,</span>
+  <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"Person"</span><span class="token punctuation">,</span>
+  <span class="token property">"givenName"</span><span class="token operator">:</span> <span class="token string">"JOHN"</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>And it’s normalized statements</p>
+<pre><code>_:c14n0 &lt;http://schema.org/givenName&gt; &quot;JOHN&quot; .
+_:c14n0 &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#type&gt; &lt;http://schema.org/Person&gt; .
+</code></pre>
+<p>A proof can then be derived using BBS+ proof derivation algorithm by disclosing a subset of the original document.</p>
 <h2 id="comparison-between-json-ld-and-json-approach"><a class="toc-anchor" href="#comparison-between-json-ld-and-json-approach" >§</a> Comparison between JSON-LD and JSON approach</h2>
 <table>
 <thead>
@@ -367,16 +373,11 @@ Implementations must understand the <code>&quot;alg&quot;</code> value specifyin
                       </header>
                       <div id="toc_list">
                         <ul class="toc">
+<li><a href="#abstract" >Abstract</a></li>
 <li><a href="#motivation" >Motivation</a></li>
-<li><a href="#existing-bbs-signature-scheme-for-json-ld" >Existing BBS+ Signature scheme for JSON-LD</a>
+<li><a href="#signature-scheme" >Signature Scheme</a>
 <ul>
-<li><a href="#signatures-using-json-ld-canonicalization" >Signatures using JSON-LD canonicalization</a></li>
-<li><a href="#proof-derivation-using-json-ld-framing" >Proof derivation using JSON-LD framing</a></li>
-</ul>
-</li>
-<li><a href="#bbs-signatures-for-json" >BBS+ Signatures for JSON</a>
-<ul>
-<li><a href="#normalization-using-json-pointer" >Normalization using JSON Pointer</a></li>
+<li><a href="#normalization-algorithm" >Normalization algorithm</a></li>
 <li><a href="#object-projections-using-json-path" >Object projections using JSON Path</a></li>
 <li><a href="#proof-formats" >Proof formats</a>
 <ul>
@@ -385,6 +386,12 @@ Implementations must understand the <code>&quot;alg&quot;</code> value specifyin
 <li><a href="#http-signatures" >Http Signatures</a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li><a href="#existing-bbs-signature-scheme-for-json-ld" >Existing BBS+ Signature scheme for JSON-LD</a>
+<ul>
+<li><a href="#signatures-using-json-ld-canonicalization" >Signatures using JSON-LD canonicalization</a></li>
+<li><a href="#proof-derivation-using-json-ld-framing" >Proof derivation using JSON-LD framing</a></li>
 </ul>
 </li>
 <li><a href="#comparison-between-json-ld-and-json-approach" >Comparison between JSON-LD and JSON approach</a></li>
