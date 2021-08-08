@@ -3,9 +3,9 @@
     "specs": [
       {
         "title": "BBS+ Signatures with JSON",
-        "spec_directory": "./docs",
+        "spec_directory": "./spec",
         "output_path": "./",
-        "logo": "json.svg",
+        "logo": "assets/icons/json.svg",
         "logo_link": "https://github.com/tmarkovski/json-bbs-signatures",
         "source": {
           "host": "github",
