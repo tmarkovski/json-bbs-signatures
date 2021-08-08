@@ -1,8 +1,8 @@
-# BBS+ Signatures for JSON data
+# BBS+ Signatures for JSON
 
-Signature scheme that allows BBS+ Signatures to be used with JSON objects defined with a JSON Schema.
+Signature scheme that allows BBS+ Signatures to be used with JSON objects as defined in JSON Schema.
 
-**Specification Status:** Strawman
+**Specification Status:** Proof of Concept
 
 **Latest Draft:**
   [https://tmarkovski.github.io/json-bbs-signatures](https://tmarkovski.github.io/json-bbs-signatures)
@@ -30,23 +30,24 @@ This document explores potential use of [BBS+ Signatures](https://mattrglobal.gi
 
 ## Signature Scheme
 
-A summary of the functional requirements needed to define a signature scheme are given below. Each of this is described in details in the next section.
+Summary of technical and functional requirements needed to define a signature scheme:
 
 <dl>
-  <dt>Normalization algorithm</dt>
-  <dd>deterministicly transform the JSON object into unique addressable statements that unambiguously describe each JSON field</dd>
-  <dt>Selective disclosure support</dt>
-  <dd>apply projections to reduce the JSON object into a subset of the original to satisfy selective disclosure requirements</dd>
-  <dt>Document definition</dt>
-  <dd>object should be described using a standardized vocabulary and schemas</dd>
-  <dt>Standard signature formats</dt>
+  <dt>Normalization Algorithm</dt>
+  <dd>Deterministicly transform a JSON document into unique addressable statements that unambiguously describe each JSON node</dd>
+  <dt>Selective Disclosure</dt>
+  <dd>Ppply projections to reduce the JSON document into a subset of the original to satisfy selective disclosure requirements</dd>
+  <dt>Document Definition</dt>
+  <dd>JSON documents should be described using a standardized vocabulary and schemas</dd>
+  <dt>Signature Format</dt>
   <dd>standardized format of reperesenting the signatures</dd>
 </dl>
 
-### Normalization algorithm
+### Normalization Algorithm
 
-This document explores the use of [JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901) as a normalization algorithm.
-JSON Pointer defines a string syntax for identifying a specific value within a JSON document. Each node in the JSON document is uniquely expressed as a string. It is standardized with [RFC 6901](https://datatracker.ietf.org/doc/html/rfc6901). There are tools and libraries available in all languages.
+This document explores the use of JSON Pointer, standardized with [RFC 6901](https://datatracker.ietf.org/doc/html/rfc6901), as a normalization algorithm.
+JSON Pointer defines a string syntax for identifying a specific value within a JSON document. Each node in the JSON document is uniquely expressed as a string.<br />
+JSON Pointer tools and libraries available in all languages.
 
 *Example JSON document of personal address*
 
@@ -62,9 +63,7 @@ JSON Pointer defines a string syntax for identifying a specific value within a J
 }
 ```
 
-Each node in this document, can be uniquely represented using JSON Pointer addressing.
-
-*JSON Pointer representation of each field and node*
+*JSON Pointer of each field and node*
 
 ```bash
 Pointer                   Value
@@ -73,7 +72,7 @@ Pointer                   Value
 "/firstName"              Jane
 "/lastName"               Doe
 "/age"                    24
-"/address"                <'address' node>
+"/address"                <"address" node>
 "/address/state"          CA
 "/address/postalCode"     394221
 ```
@@ -100,10 +99,15 @@ or the entire document as an array of stringified objects:
 
 This collection of statements can then be signed using BBS+ signatures library.
 
-### Object projections using JSON Path
+#### Algorithm Details
+
+TODO: Add step by step descriptions
+
+### Selective Disclosure
 
 BBS+ Signatures support selective disclosure which allows the derivation of signature proof
-by disclosing only a subset of the originally signed statements.
+by disclosing only a subset of the originally signed statements. Partial JSON documents can be represented with
+a set of statement using JSON Path or JSON Pointer. Both are equally viable to describe the final document projection.
 
 *Example of partial document*
 
@@ -116,7 +120,9 @@ by disclosing only a subset of the originally signed statements.
 }
 ```
 
-In order to provide a standardized way of describing object projections we can use [JSON Path](https://datatracker.ietf.org/doc/draft-ietf-jsonpath-base/01/). In order to request multiple document nodes, we can use an array of JSON Path expressions.
+#### Using JSON Path
+
+In order to provide a standardized way of describing object projections we can use [JSON Path](https://datatracker.ietf.org/doc/draft-ietf-jsonpath-base/01/). To request multiple document nodes, we can use an array of JSON Path expressions.
 
 *Example JSON Path expressions*
 
@@ -137,7 +143,49 @@ $.address[?(@ === 'CA')]   // returns the address object if the state is 'CA'
 $.address[*]               // returns all fields in the 'address' node
 ```
 
-### Proof formats
+#### Using JSON Pointer
+
+Similarly, a set of JSON pointers can be used to request disclosure of a subset of the document.
+
+```json
+[
+  "/firstName",
+  "/address/state"
+]
+```
+
+JSON pointer lacks the expressive syntax of JSON Path, but it's still a good candidate to request document disclosure.
+JSON pointer can also be used with URI's to communicate a data from a specific schema.
+
+```json
+[
+  "https://example.com/Person.json#/firstName",
+  "https://example.com/Person.json#/address/state",
+]
+```
+
+### Document Definition
+
+JSON documents can use JSON Schema to reference a standardized data format. JSON Schemas can be used with decentralized storage systems to provide immutability to the schema. There's is no technical requirement for JSON Schemas in the signauture scheme, it's use is mostly for normative purposes.
+
+JSON Schema can be referenced in a document as:
+
+```json
+{
+  "$schema": "https://example.com/Person.json",
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "age": 24,
+  "address": {
+    "state": "CA",
+    "postalCode": "394221"
+  }
+}
+```
+
+This will allow a signature to be created over the object and it's schema definition if required.
+
+### Signature Format
 
 This signature method is usable with many different signature formats, though with varying levels of compatibility. Most signature formats are designed for traditional signature schemes that use a single data payload. Since BBS signatures operate over a data array vector, some of these schemes will require exensibility.
 
@@ -145,99 +193,93 @@ This signature method is usable with many different signature formats, though wi
 
 Using this method will require extensibility of the original spec, since JWS works with single payload representation. However, the JWS/JWT data model and registered claims can be used to construct a digital signature for multi-payload schemes.
 
-##### Signature for JSON payload
-
 *Given a JWS header*
-
-```js
-{
-  "alg": "https://mattrglobal.github.io/bbs-signatures-spec/#signature",
-  "kid": "https://example.edu/issuers/keys/1"
-}
-```
-
-We can produce a signature payload by concatenating the header with the document.
-
-```js
-[
-  // HEADER
-  '{"":{}}',
-  '{"/alg":"https://mattrglobal.github.io/bbs-signatures-spec/#signature"}',
-  '{"/kid":"https://example.edu/issuers/keys/1"}',
-
-  // DOCUMENT
-  '{"":{}}',
-  '{"/address":{}}',
-  '{"/address/postalCode":"394221"}',
-  '{"/address/state":"CA"}',
-  '{"/age":24}',
-  '{"/firstName":"Jane"}',
-  '{"/lastName":"Doe"}'
-]
-```
-
-We can sign the above personal address document by concatenating the normalized forms (using JSON Pointer) of the header and the document, and produce BBS+ signature over the entire message vector. The signaute can still be represented in compact form, but it will be verified using the normalization method described here, instead the one described in the JWS spec.
-Implementations must understand the `"alg"` value specifying the exact algorithm used.
-
-##### Signature proof derivation
-
-Similarly, when deriving proof of existing signature, the following header can be used.
-
-```js
-{
-  "alg": "https://mattrglobal.github.io/bbs-signatures-spec/#signatureProof",
-  "kid": "https://example.edu/issuers/keys/1",
-  "crit": [ "nonce" ],
-  "nonce": "MTIzNDU="
-}
-```
-
-The difference here is the use of a different URI value for the `"alg"` field and the inclusion of `"nonce"` in the `"crit"` field.
-
-##### Other BBS operations / ZKP
-
-The BBS+ Signatures spec defines other algorithms that operate in ZKP contexts, such as blinded signatures. These operations can also be used with JWS to provide seamless signature data model that works over all BBS signatures operations.
-
-> This JWS approach will require defining JWS extension spec that will describe the exact signature algorithms used for each operation.
-
-#### Linked Data Proofs
-
-Using LD Proofs is a bit more straightfoward considering that JSON-LD is also a JSON. The normalization algorithm works over any JSON, so JSON-LD compliant document can be used to produce LD signature. The document can include `@context` field which should point to the security vocabulary context, and add the proof value inline.
-
-*Example signed document with custom signature suite*
 
 ```json
 {
-  "@context": "https://w3id.org/security/v2",
-  "firstName": "Jane",
-  "lastName": "Doe",
-  "age": 24,
-  "address": {
-    "state": "CA",
-    "postalCode": "394221"
-  },
-  "proof": {
-    "type": "https://github.com/trinsic-id/json-bbs-signatures#signature",
-    "created": "2021-07-01",
-    "verificationMethod": "https://example.edu/issuers/keys/1",
-    "proofPurpose": "assertionMethod",
-    "proofValue": "F9uMu...DEg=="
-  }
+    "alg": "https://mattrglobal.github.io/bbs-signatures-spec/#name-sign",
+    "kid": "https://example.edu/issuers/keys/1"
 }
 ```
 
-The `proofValue` can be calculated by normalizing the entire object including the proof object. Alternatively, to support proof sets and proof chains, the proof value can be calculated by concatenating the normalized proof object in compacted form and the normalized document without the `proof` node.
+or header for proof derivation algorithm
 
-If LD semantics are important to the use case, a valid JSON-LD document can also be used.
+```json
+{
+    "alg": "https://mattrglobal.github.io/bbs-signatures-spec/#name-blindmessagesproofgen",
+    "kid": "https://example.edu/issuers/keys/1",
+    "crit": ["nonce"],
+    "nonce": "3zpI2FINNA=="
+}
+```
 
-> It's important to note that when LD tooling is available, this JSON scheme doesn't offer any significant adventage over JSON-LD scheme, though compatiblity with LD suites is possible.
+We can produce a signature payload by using JWS JSON serialization
 
-This approach will require defining a new LD signature suite that describes the normalization algorithm and proof construction methods used.
+```json
+{
+  "protected": {
+    "alg": "https://mattrglobal.github.io/bbs-signatures-spec/#name-sign",
+    "kid": "https://example.edu/issuers/keys/1"
+  },
+  "payload": {
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "age": 24,
+    "address": {
+      "state": "CA",
+      "postalCode": "394221"
+    }
+  }
+}
+
+```
+
+Apply the normalization algorithm to obtain the signing statements
+
+```json
+[
+  '{"":{}}',
+  '{"/payload":{}}',
+  '{"/payload/address":{}}',
+  '{"/payload/address/postalCode":"394221"}',
+  '{"/payload/address/state":"CA"}',
+  '{"/payload/age":24}',
+  '{"/payload/firstName":"Jane"}',
+  '{"/payload/lastName":"Doe"}',
+  '{"/protected":{}}',
+  '{"/protected/alg":"https://mattrglobal.github.io/bbs-signatures-spec/#name-sign"}',
+  '{"/protected/kid":"https://example.edu/issuers/123#signing-key-1"}'
+]
+```
+
+Append the signature (encoded in base64) to the JWS message
+
+```json
+{
+  "protected": {
+    "alg": "https://mattrglobal.github.io/bbs-signatures-spec/#name-sign",
+    "kid": "https://example.edu/issuers/keys/1"
+  },
+  "payload": {
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "age": 24,
+    "address": {
+      "state": "CA",
+      "postalCode": "394221"
+    }
+  },
+  "signature": "pujOXuHxs4zDpONCLJsQSWzAwDH5mBGvpbPUMawQyQZgVkY5VMh+l/iEc+KH+gnQSDdOd1g1JKBqY8y3J9CDz1oXjNAkQwoJefIevaSnc8AT7CIPVRBxGuJJ4vbIGwUIF44TXTBMIFgC3zpI2FINNA=="
+}
+```
+
+##### Additional BBS+ operations and ZKP
+
+The BBS+ Signatures spec defines other algorithms that operate in ZKP contexts, such as blinded signatures. These operations can also be used with JWS to provide seamless signature data model that works over all BBS signatures operations.
 
 #### Http Signatures
 
 It is possible to use [Http Signatures](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12) when working with JSON content. While the spec is somewhat vague on extensibility, there's a clear opportunity for BBS+ Signatures with JSON data to be used with this scheme.
-
 
 
 ## Existing BBS+ Signature scheme for JSON-LD

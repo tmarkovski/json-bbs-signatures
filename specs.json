@@ -2,7 +2,7 @@
 {
     "specs": [
       {
-        "title": "BBS+ Signatures with JSON",
+        "title": "BBS Signatures with JSON",
         "spec_directory": "./spec",
         "output_path": "./",
         "logo": "assets/icons/json.svg",
@@ -13,7 +13,7 @@
           "repo": "json-bbs-signatures"
         },
         "assets": [
-          { "path": "/custom-assets/custom.css" },
+          { "path": "/assets/style.css" },
           { "path": "/custom-assets/custom-head.js", "inject": "head" },
           { "path": "/custom-assets/custom-body.js", "inject": "body" }
         ]

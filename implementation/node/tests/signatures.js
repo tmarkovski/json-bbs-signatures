@@ -28,7 +28,6 @@ test("demo test w/ plain json", async (t) => {
   t.true(isProofVerified);
 });
 
-
 test("demo test w/ vc", async (t) => {
   const keyPair = await generateBls12381G2KeyPair();
 
@@ -37,4 +36,32 @@ test("demo test w/ vc", async (t) => {
   const isVerified = await verify(documentVc, keyPair.publicKey, signature);
 
   t.true(isVerified);
+});
+
+test("demo jws", async (t) => {
+  const jws = {
+    protected: {
+      alg: "https://mattrglobal.github.io/bbs-signatures-spec/#name-sign",
+      kid: "https://example.edu/issuers/123#signing-key-1",
+    },
+    payload: {
+      firstName: "Jane",
+      lastName: "Doe",
+      age: 24,
+      address: {
+        state: "CA",
+        postalCode: "394221",
+      },
+    },
+  };
+
+  const keyPair = await generateBls12381G2KeyPair();
+  const signature = await sign(jws, keyPair);
+
+  const signed_jws = {
+    ...jws,
+    signature: Buffer.from(signature).toString("base64"),
+  };
+
+  t.pass();
 });
