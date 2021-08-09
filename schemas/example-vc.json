@@ -1,0 +1,14 @@
+{
+  "$schema": "./vc-data-model/index.json",
+  "id": "https://example.edu/credentials/1",
+  "issuer": "did:example:1",
+  "type": ["VerifiableCredential", "UniversityDegreeCredential" ],
+  "issuanceDate": "2010-01-01T19:23:24Z",
+  "credentialSubject": {
+    "id": "did:example:ebfeb1f712ebc6f1c276e12ec21",
+    "degree": {
+      "type": "BachelorDegree",
+      "name": "Bachelor of Science and Arts"
+    }
+  }
+}

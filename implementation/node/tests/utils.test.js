@@ -35,16 +35,16 @@ test("filter array property", (t) => {
 
 test("flatten object using json pointer syntax", (t) => {
   const document = {
-    "firstName": "Rack",
-    "lastName": "Jackon",
-    "age": 24,
-    "address": {
-      "state": "CA",
-      "postalCode": "394221"
-    }
+    firstName: "Rack",
+    lastName: "Jackon",
+    age: 24,
+    address: {
+      state: "CA",
+      postalCode: "394221",
+    },
   };
 
   const flattened = normalize(document);
-  console.log(flattened.asText);
+  
   t.pass();
 });
