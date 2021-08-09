@@ -1,6 +1,6 @@
 # BBS+ Signatures for JSON
 
-Signature scheme that allows BBS+ Signatures to be used with JSON objects as defined in JSON Schema.
+Signature scheme proposal for using BBS+ signatures with JSON documents.
 
 **Specification Status:** Proof of Concept
 
@@ -19,7 +19,7 @@ Participate:
 
 ## Abstract
 
-This document explores potential use of [BBS+ Signatures](https://mattrglobal.github.io/bbs-signatures-spec/) with JSON data.
+This document explores potential use of [BBS+ signatures](https://mattrglobal.github.io/bbs-signatures-spec/) with JSON documents. It uses common JSON concepts and standards, such as JSON Schema, JSON Pointer and JSON Path, in contrast to the already established signature scheme that use Linked Data processors.
 
 ## Motivation
 
@@ -34,13 +34,13 @@ Summary of technical and functional requirements needed to define a signature sc
 
 <dl>
   <dt>Normalization Algorithm</dt>
-  <dd>Deterministicly transform a JSON document into unique addressable statements that unambiguously describe each JSON node</dd>
+  <dd>Deterministicly transform a JSON document into unique statements that unambiguously describe each JSON node</dd>
   <dt>Selective Disclosure</dt>
-  <dd>Ppply projections to reduce the JSON document into a subset of the original to satisfy selective disclosure requirements</dd>
+  <dd>Apply projections to reduce the JSON document into a subset of the original to satisfy selective disclosure requirements</dd>
   <dt>Document Definition</dt>
-  <dd>JSON documents should be described using a standardized vocabulary and schemas</dd>
+  <dd>JSON documents should be described using a standardized vocabulary and schemas. Consuming applications should be able to validate and interpret a document based on a pre-defined schema.</dd>
   <dt>Signature Format</dt>
-  <dd>standardized format of reperesenting the signatures</dd>
+  <dd>Standardized format of reperesenting the signatures</dd>
 </dl>
 
 ### Normalization Algorithm
@@ -101,7 +101,7 @@ This collection of statements can then be signed using BBS+ signatures library.
 
 #### Algorithm Details
 
-TODO: Add step by step descriptions
+TODO: Add step by step descriptions. See [implementation](https://github.com/tmarkovski/json-bbs-signatures/tree/main/implementation/node) details.
 
 ### Selective Disclosure
 
@@ -187,7 +187,7 @@ This will allow a signature to be created over the object and it's schema defini
 
 ### Signature Format
 
-This signature method is usable with many different signature formats, though with varying levels of compatibility. Most signature formats are designed for traditional signature schemes that use a single data payload. Since BBS signatures operate over a data array vector, some of these schemes will require exensibility.
+This signature scheme is usable with many different signature formats, though with varying levels of compatibility. Most signature formats are designed for traditional signature schemes that use a single data payload. Since BBS signatures operate over a message vector, some of these schemes will require exensibility.
 
 #### JOSE signatures (JWS/JWT)
 
@@ -213,7 +213,7 @@ or header for proof derivation algorithm
 }
 ```
 
-We can produce a signature payload by using JWS JSON serialization
+We can produce a signature payload by using JWS flattened JSON serialization
 
 ```json
 {
@@ -273,149 +273,101 @@ Append the signature (encoded in base64) to the JWS message
 }
 ```
 
-##### Additional BBS+ operations and ZKP
+#### Linked Data Proofs
 
-The BBS+ Signatures spec defines other algorithms that operate in ZKP contexts, such as blinded signatures. These operations can also be used with JWS to provide seamless signature data model that works over all BBS signatures operations.
+It is possible to use the signature scheme with LD proof format, by extending the spec with additional signature types. These types will describe the canocalization algorithm used and other parameters, as outlined in section [10. Creating New Proof Types](https://w3c-ccg.github.io/ld-proofs/#creating-new-proof-types). It seems this would be considered normative approach, as the LD Proofs spec doesn't explicitly require the use of URDNA2015 transformation.
+
 
 #### Http Signatures
 
-It is possible to use [Http Signatures](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12) when working with JSON content. While the spec is somewhat vague on extensibility, there's a clear opportunity for BBS+ Signatures with JSON data to be used with this scheme.
-
-
-## Existing BBS+ Signature scheme for JSON-LD
-
-BBS+ Signatures can be used with [linked data signatures](https://w3c-ccg.github.io/ldp-bbs2020/) using JSON-LD format. This approach uses normalization of the JSON-LD document using [RDF dataset normalization algorithm](https://json-ld.github.io/rdf-dataset-canonicalization/spec/).
-
-### Signatures using JSON-LD canonicalization
-
-To sign a JSON-LD document, it must be normalized using the following steps:
-
-*Step 1: Input document*
-
-```json
-{
-  "@context": [
-    "https://schema.org",
-    "https://w3id.org/security/v1"
-  ],
-  "type": "Person",
-  "givenName": "JOHN",
-  "lastName": "SMITH"
-}
-```
-
-This next intermidate step ensures the document is in the correct context.
-
-*Step 2: Compacted input document using JSON-LD compaction algorithm*
-
-```json
-{
-  "@context": "https://w3id.org/security/v1",
-  "type": "http://schema.org/Person",
-  "http://schema.org/givenName": "JOHN",
-  "http://schema.org/lastName": "SMITH"
-}
-```
-
-*Step 3: Normalized document using URDNA2015 algorithm*
-
-```turtle
-_:c14n0 <http://schema.org/givenName> "JOHN" .
-_:c14n0 <http://schema.org/lastName> "SMITH" .
-_:c14n0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> .
-```
-
-The final set of normalized statements is then signed using BBS+ and the signature is produced. This approach requires valid JSON-LD document.
-
-### Proof derivation using JSON-LD framing
-
-To allow selective disclosure of data, JSON-LD provides a way to describe a subset of the document, using the framing alorithm.
-
-*Example JSON-LD frame*
-
-```json
-{
-  "@context": "https://schema.org",
-  "@explicit": true,
-  "givenName": {}
-}
-```
-
-When the original document is framed using the above expression, we get a subset of the document
-
-```json
-{
-  "@context": "https://schema.org",
-  "type": "Person",
-  "givenName": "JOHN"
-}
-```
-
-And it's normalized statements
-
-```
-_:c14n0 <http://schema.org/givenName> "JOHN" .
-_:c14n0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> .
-```
-
-A proof can then be derived using BBS+ proof derivation algorithm by disclosing a subset of the original document.
+It is possible to use [Http Signatures](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12) when working with JSON content. While the spec is somewhat vague on extensibility, there's a clear opportunity for BBS+ signatures with JSON documents to be used with this scheme.
 
 ## Comparison between JSON-LD and JSON approach
 
 |Feature| JSON-LD | JSON |
 |-|-|-|
 | Normalization algorithm | URDNA2015 | JSON Pointer |
-| Selective disclosure | Framing algorithm | JSON Path |
+| Selective disclosure | Framing algorithm | JSON Path <br /> JSON Pointer |
 | Document definition | LD Context | JSON Schema |
-| Compatible with JWS |  | &#10004; (extensions) |
+| Compatible with JWS |  | &#10004; |
 | Library and tooling support | Limited | Widely available |
-| Offline usability | Requires document caching | &#10004; |
+| Offline usability | Document resolution requires caching | &#10004; |
 
 ## Standards Considerations
 
-[Add more details]
-
-### Considerations when using Linked Data
-
-Linked data operates as a semantic structure, rather than format structure. This means that in LD terms, the following documents have the same meaning.
-
-```js
-// single context
-{
-  "@context": "https://schema.org",
-  "firstName": "Jane"
-}
-
-// context as array object
-{
-  "@context": [ "https://schema.org" ],
-  "firstName": "Jane"
-}
-
-// multiple context URIs
-{
-  "@context": [ "https://schema.org" , "http://example.org"],
-  "firstName": "Jane"
-}
-
-// compacted document without context
-{
-  "https://schema.org/firstName": "Jane"
-}
-```
-
-When using LD processor and signature suites, all above documents will be semantically represented as the same RDF data set and thus producing the same signature result.
-
-The signature scheme discussed in this document operates on top of JSON format and does not allow different data formats (except for object field ordering).
+[TODO]
 
 ### VC Data Model Conformance
 
-The VC Data Model as a JSON structure is compatible with this signature scheme.
+The [Verifiable Credentials Data Model 1.0](https://www.w3.org/TR/vc-data-model/) describes potential use of JSON format. The spec could use an update to clarify the exact use of the model with non-LD data, however, based on the guidance for field transformation, using the VC model with this scheme is possible.
 
-[Add more details]
+Here's an example of a VC describing university degree credential expressed in JSON with a `$schema` reference.
 
-### Presentation Exchange Compatibility
+```json
+{
+  "$schema": "./vc-data-model/index.json",
+  "id": "https://example.edu/credentials/1",
+  "issuer": "did:example:issuer1",
+  "type": ["VerifiableCredential", "UniversityDegreeCredential" ],
+  "issuanceDate": "2010-01-01T19:23:24Z",
+  "credentialSubject": {
+    "id": "did:example:ebfeb1f712ebc6f1c276e12ec21",
+    "degree": {
+      "type": "BachelorDegree",
+      "name": "Bachelor of Science and Arts"
+    }
+  }
+}
+```
 
-PEx definition uses JSON Path to request data for disclosure. This can be used directly in the proof derivation algorithm in this spec.
+This document can be signed using the JTW proof format
 
-[Add more details]
+```json
+{
+  "sub": "did:example:ebfeb1f712ebc6f1c276e12ec21",
+  "jti": "https://example.edu/credentials/1",
+  "iss": "did:example:issuer1",
+  "nbf": 1541493724,
+  "iat": 1541493724,
+  "exp": 1573029723,
+  "vc": {
+    "type": ["VerifiableCredential", "UniversityDegreeCredential"],
+    "credentialSubject": {
+      "degree": {
+        "type": "BachelorDegree",
+        "name": "Bachelor of Science and Arts"
+      }
+    }
+  }
+}
+```
+
+or represented as JWT in flattened JSON serialization
+
+```json
+{
+  "payload": {
+    "sub": "did:example:ebfeb1f712ebc6f1c276e12ec21",
+    "jti": "https://example.edu/credentials/1",
+    "iss": "did:example:issuer1",
+    "nbf": 1541493724,
+    "iat": 1541493724,
+    "exp": 1573029723,
+    "vc": {
+      "type": ["VerifiableCredential", "UniversityDegreeCredential"],
+      "credentialSubject": {
+        "degree": {
+          "type": "BachelorDegree",
+          "name": "Bachelor of Science and Arts"
+        }
+      }
+    }
+  },
+  "protected": {
+    "alg": "https://mattrglobal.github.io/bbs-signatures-spec/#name-sign",
+    "kid": "did:example:issuer1#keys-1"
+  }
+}
+```
+
+## References
