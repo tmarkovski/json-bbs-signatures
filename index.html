@@ -83,10 +83,8 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
   <dd>Standardized format of reperesenting the signatures</dd>
 </dl>
 <h3 id="normalization-algorithm"><a class="toc-anchor" href="#normalization-algorithm" >§</a> Normalization Algorithm</h3>
-<p>This document explores the use of JSON Pointer, standardized with <a path-0="datatracker.ietf.org"path-1="doc"path-2="html"path-3="rfc6901"href="https://datatracker.ietf.org/doc/html/rfc6901" >RFC 6901</a>, as a normalization algorithm.
-JSON Pointer defines a string syntax for identifying a specific value within a JSON document. Each node in the JSON document is uniquely expressed as a string.<br />
-JSON Pointer tools and libraries available in all languages.</p>
-<p><em>Example JSON document of personal address</em></p>
+<p>This document explores the use of <a path-0="github.com"path-1="trinsic-id"path-2="json-normalize-ptr-spec"href="https://github.com/trinsic-id/json-normalize-ptr-spec" >JSON Normalization</a> algorithm based on <a path-0="datatracker.ietf.org"path-1="doc"path-2="html"path-3="rfc6901"href="https://datatracker.ietf.org/doc/html/rfc6901" >JSON Pointer</a>. The normalization algorithm produces an output that flattens the original JSON object.</p>
+<p><em>Example JSON document:</em></p>
 <pre class="language-json"><code class="language-json"><span class="token punctuation">{</span>
   <span class="token property">"firstName"</span><span class="token operator">:</span> <span class="token string">"Jane"</span><span class="token punctuation">,</span>
   <span class="token property">"lastName"</span><span class="token operator">:</span> <span class="token string">"Doe"</span><span class="token punctuation">,</span>
@@ -97,19 +95,24 @@ JSON Pointer tools and libraries available in all languages.</p>
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span>
 </code></pre>
-<p><em>JSON Pointer of each field and node</em></p>
-<pre class="language-bash"><code class="language-bash">Pointer                   Value
------------------------------------------
-<span class="token string">""</span>                        <span class="token operator">&lt;</span>root node<span class="token operator">></span>
-<span class="token string">"/firstName"</span>              Jane
-<span class="token string">"/lastName"</span>               Doe
-<span class="token string">"/age"</span>                    <span class="token number">24</span>
-<span class="token string">"/address"</span>                <span class="token operator">&lt;</span><span class="token string">"address"</span> node<span class="token operator">></span>
-<span class="token string">"/address/state"</span>          CA
-<span class="token string">"/address/postalCode"</span>     <span class="token number">394221</span>
+<p><em>The normalized form of this document:</em></p>
+<pre class="language-json"><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">""</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"/firstName"</span><span class="token operator">:</span> <span class="token string">"Jane"</span><span class="token punctuation">,</span>
+  <span class="token property">"/lastName"</span><span class="token operator">:</span> <span class="token string">"Doe"</span><span class="token punctuation">,</span>
+  <span class="token property">"/age"</span><span class="token operator">:</span> <span class="token number">24</span><span class="token punctuation">,</span>
+  <span class="token property">"/address"</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"/address/state"</span><span class="token operator">:</span> <span class="token string">"CA"</span><span class="token punctuation">,</span>
+  <span class="token property">"/address/postalCode"</span><span class="token operator">:</span> <span class="token string">"394221"</span>
+<span class="token punctuation">}</span>
 </code></pre>
-<p>This unique addressing allows us to express each statement as a single JSON object using the format:</p>
-<pre class="language-js"><code class="language-js"><span class="token punctuation">{</span> <span class="token string">"/firstName"</span><span class="token operator">:</span> <span class="token string">"Jane"</span> <span class="token punctuation">}</span>
+<p>Each of these statements, can now be signed using the BBS signature scheme. However, before we sign these messages, we need to represent them in a string format. An idiomatic way to achieve this would be to represent each key/value pair as a single JSON object and stringify the entire object into an array:</p>
+<pre class="language-json"><code class="language-json"><span class="token punctuation">[</span>
+  <span class="token punctuation">{</span> <span class="token property">""</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span> <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token punctuation">{</span> <span class="token property">"/firstName"</span><span class="token operator">:</span> <span class="token string">"Jane"</span> <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token punctuation">{</span> <span class="token property">"/lastName"</span><span class="token operator">:</span> <span class="token string">"Doe"</span> <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  ...
+<span class="token punctuation">]</span>
 </code></pre>
 <p>or the entire document as an array of stringified objects:</p>
 <pre class="language-js"><code class="language-js"><span class="token punctuation">[</span>
@@ -125,16 +128,10 @@ JSON Pointer tools and libraries available in all languages.</p>
 <p>This collection of statements can then be signed using BBS+ signatures library.</p>
 <h4 id="algorithm-details"><a class="toc-anchor" href="#algorithm-details" >§</a> Algorithm Details</h4>
 <ul>
-<li>Given an input JSON document, create an empty JSON array to represent the flattened object structure</li>
-<li>Add root node entry object of the format <code>{ &quot;&quot;: &lt;value&gt; }</code> where value is <code>{}</code> or <code>[]</code>, depending on root document type</li>
-<li>Traverse the JSON document recursively, including all child nodes, and for each node add an object entry in the flattened array of the format <code>{ &quot;&lt;json pointer&gt;&quot;: &lt;value&gt;}</code> where
-<ul>
-<li>if the node is of type <code>string</code>, <code>number</code> or <code>null</code> add the pointer address and the value as is. Example <code>{ &quot;/name&quot;: &quot;John Smith&quot; }</code>, <code>{ &quot;/age&quot;: 24 }</code>, etc.</li>
-<li>if the node is of type <code>object</code>, add empty object entry <code>{ &quot;&lt;pointer&gt;&quot;: {}}</code>. Continue the steps for each child node.</li>
-<li>if the node is of type <code>array</code>, add empty object array <code>{ &quot;&lt;pointer&gt;&quot;: []}</code>. Continue the steps for each array item.</li>
-</ul>
-</li>
-<li>Create new JSON array and add each element from the flattened array in their stringified form, using the native stringify functionality as described in <a path-0="tc39.es"path-1="ecma262"path-2="#sec-json.stringify"href="https://tc39.es/ecma262/#sec-json.stringify" >ECMAScript spec</a>.</li>
+<li>Given an input JSON document, use the <a href="#normalization-algorithm" >normalization algorithm</a> to obtain a normalized map of the document.</li>
+<li>Create new JSON array that will contain the resulting signing statements.</li>
+<li>Add each element from the normalized map to the resulting array using by wrapping the key/value into a JSON object</li>
+<li>Stringify the element using the native stringify functionality as described in <a path-0="tc39.es"path-1="ecma262"path-2="#sec-json.stringify"href="https://tc39.es/ecma262/#sec-json.stringify" >ECMAScript spec</a>.</li>
 <li>Sort the string messages in the array in place</li>
 </ul>
 <p>See <a path-0="github.com"path-1="tmarkovski"path-2="json-bbs-signatures"path-3="tree"path-4="main"path-5="implementation"path-6="node"href="https://github.com/tmarkovski/json-bbs-signatures/tree/main/implementation/node" >implementation</a> details.</p>
