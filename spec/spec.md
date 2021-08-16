@@ -1,14 +1,14 @@
 # BBS+ Signatures for JSON
 
-Signature scheme proposal for using BBS+ signatures with JSON documents.
+Signature scheme proposal for using BBS+ signatures with JSON documents using JSON Pointer Normalization.
 
-**Specification Status:** Proof of Concept
+**Document Status:** Experimental / Proof of Concept
 
 **Latest Draft:**
-  [https://tmarkovski.github.io/json-bbs-signatures](https://tmarkovski.github.io/json-bbs-signatures)
+  [https://trinsic-id.github.io/json-bbs-signatures](https://trinsic-id.github.io/json-bbs-signatures)
 
 Editors:
-~ [Tomislav Markovski](https://www.linkedin.com/in/tmarkovski/)
+~ [Tomislav Markovski](https://www.linkedin.com/in/tmarkovski/) (Trinsic)
 
 Participate:
 ~ [GitHub repo](https://github.com/tmarkovski/json-bbs-signatures)
@@ -19,11 +19,14 @@ Participate:
 
 ## Abstract
 
-This document explores potential use of [BBS+ signatures](https://mattrglobal.github.io/bbs-signatures-spec/) with JSON documents. It uses common JSON concepts and standards, such as JSON Schema, JSON Pointer and JSON Path, in contrast to the already established signature scheme that use Linked Data processors.
+This document explores potential use of [BBS+ signatures](https://mattrglobal.github.io/bbs-signatures-spec/) with JSON documents.
+It introduces new normalization algorithm that can be used with non-JSON-LD processors using common JSON concepts and standards,
+such as JSON Schema, JSON Pointer and JSON Path.
 
 ## Motivation
 
-- Expand practical applications of BBS+ Signatures with JSON data
+- Expand practical applications of BBS+ Signatures with JSON data for use with non-LD processors
+- Extend BBS signature schemes with additional normalization algorithms
 - Enable partial JSON data verification through selective disclosure
 - Expand the availability of BBS+ Signatures for all platforms and languages by using widely available tools
 - Explore practical implementation of offline use cases for signature verification
@@ -45,11 +48,9 @@ Summary of technical and functional requirements needed to define a signature sc
 
 ### Normalization Algorithm
 
-This document explores the use of JSON Pointer, standardized with [RFC 6901](https://datatracker.ietf.org/doc/html/rfc6901), as a normalization algorithm.
-JSON Pointer defines a string syntax for identifying a specific value within a JSON document. Each node in the JSON document is uniquely expressed as a string.<br />
-JSON Pointer tools and libraries available in all languages.
+This document explores the use of [JSON Pointer Normalization](https://github.com/trinsic-id/json-normalize-ptr-spec) algorithm based on [JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901). The normalization algorithm produces an output that flattens the original JSON object.
 
-*Example JSON document of personal address*
+*Example JSON document:*
 
 ```json
 {
@@ -63,24 +64,30 @@ JSON Pointer tools and libraries available in all languages.
 }
 ```
 
-*JSON Pointer of each field and node*
+*The normalized form of this document:*
 
-```bash
-Pointer                   Value
------------------------------------------
-""                        <root node>
-"/firstName"              Jane
-"/lastName"               Doe
-"/age"                    24
-"/address"                <"address" node>
-"/address/state"          CA
-"/address/postalCode"     394221
+```json
+{
+  "": {},
+  "/firstName": "Jane",
+  "/lastName": "Doe",
+  "/age": 24,
+  "/address": {},
+  "/address/state": "CA",
+  "/address/postalCode": "394221"
+}
 ```
 
-This unique addressing allows us to express each statement as a single JSON object using the format:
+Each of these statements, can now be signed using the BBS signature scheme. However, before we sign these messages, we need to represent them in a string format.
+An idiomatic way to achieve this would be to represent each key/value pair as a single JSON object and stringify the entire object into an array:
 
-```js
-{ "/firstName": "Jane" }
+```json
+[
+  { "": {} },
+  { "/firstName": "Jane" },
+  { "/lastName": "Doe" },
+  ...
+]
 ```
 
 or the entire document as an array of stringified objects:
@@ -97,17 +104,14 @@ or the entire document as an array of stringified objects:
 ]
 ```
 
-This collection of statements can then be signed using BBS+ signatures library.
+This collection of statements can then be signed using available BBS+ signatures library.
 
 #### Algorithm Details
 
-- Given an input JSON document, create an empty JSON array to represent the flattened object structure
-- Add root node entry object of the format `{ "": <value> }` where value is `{}` or `[]`, depending on root document type
-- Traverse the JSON document recursively, including all child nodes, and for each node add an object entry in the flattened array of the format `{ "<json pointer>": <value>}` where
-  - if the node is of type `string`, `number` or `null` add the pointer address and the value as is. Example `{ "/name": "John Smith" }`, `{ "/age": 24 }`, etc.
-  - if the node is of type `object`, add empty object entry `{ "<pointer>": {}}`. Continue the steps for each child node.
-  - if the node is of type `array`, add empty object array `{ "<pointer>": []}`. Continue the steps for each array item.
-- Create new JSON array and add each element from the flattened array in their stringified form, using the native stringify functionality as described in [ECMAScript spec](https://tc39.es/ecma262/#sec-json.stringify).
+- Given an input JSON document, use the [normalization algorithm](#normalization-algorithm) to obtain a normalized map of the document.
+- Create new JSON array that will contain the resulting signing statements.
+- Add each element from the normalized map to the resulting array using by wrapping the key/value into a JSON object
+- Stringify the element using the native stringify functionality as described in [ECMAScript spec](https://tc39.es/ecma262/#sec-json.stringify).
 - Sort the string messages in the array in place
 
 See [implementation](https://github.com/tmarkovski/json-bbs-signatures/tree/main/implementation/node) details.
