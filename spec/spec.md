@@ -333,7 +333,7 @@ Here's an example of a VC describing university degree credential expressed in J
 }
 ```
 
-This document can be signed using the JTW proof format
+This document can be signed using the JWT proof format
 
 ```json
 {
