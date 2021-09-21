@@ -7,6 +7,36 @@ This document describes a BBS signature suite for Linked Data Proofs. The suite 
 The main goal of this signature suite is to define additional BBS signature scheme that utilize simpler algorithms compared to existing ones. This is useful in situations where JSON-LD processors or suites are unavailable. The existing [BBS+ Signatures 2020](https://w3c-ccg.github.io/ldp-bbs2020/) uses JSON-LD processors and data canonizalization using URDNA2015 in contrast to this suite which uses simpler normalization algorithm based on JSON Pointer document flattening.
 This normalization algorithm can utilize selective disclosure and ZKP features defines in the BBS spec.
 
+## JSON Pointer
+
+[JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901) is an IETF standards track specification that defines a string syntax for identifying a specific value within a JavaScript Object Notation (JSON) document. For example, in the document below:
+
+```json
+{
+  "foo": {
+    "bar": "baz"
+  },
+  "this": "that"
+}
+```
+
+The JSON pointer of the value `"baz"` is `/foo/bar`, the value at JSON Pointer `/this` is `"that"`, etc.
+
+
+## Linked Data Proofs - Canonicalization Algorithm
+
+[Section 10 - Creating New Proof Types](https://w3c-ccg.github.io/ld-proofs/#creating-new-proof-types) in Linked Data Proofs 1.0 document outlines a recommendation for creating new proof types. We can use the `canonicalizationAlgorithm` term to specify the use of JSON Pointer canonicalization in the BBS Signature suite.
+
+```json
+{
+  "type": "BlsBbsSignature2020",
+  "canonicalizationAlgorithm": "https://datatracker.ietf.org/doc/rfc6901/",
+  "created": "2021-07-02T20:34:57Z",
+  "proofPurpose": "assertionMethod",
+  "verificationMethod": "did:example:Wz4eUg7SetGfaUVCn8U9d62oDYrUJLuUtcy619#test"
+}
+```
+
 ## Signature Algorithm
 
 To produce signature using this scheme, the followoing steps are performed in order:
@@ -40,7 +70,8 @@ Given an unsigned VC document with `proof` object appended:
     }
   },
   "proof": {
-    "type": "https://mattrglobal.github.io/bbs-signatures-spec/#name-sign",
+    "type": "BlsBbsSignature2020",
+    "canonicalizationAlgorithm": "https://datatracker.ietf.org/doc/rfc6901/",
     "created": "2021-07-02T20:34:57Z",
     "proofPurpose": "assertionMethod",
     "verificationMethod": "did:example:Wz4eUg7SetGfaUVCn8U9d62oDYrUJLuUtcy619#test"
@@ -52,26 +83,19 @@ Normalized document using JSON Pointer addressing
 
 ```json
 {
-  "": {},
-  "/@context": [],
   "/@context/0": "https://www.w3.org/2018/credentials/v1",
   "/@context/1": "https://www.w3.org/2018/credentials/examples/v1",
-  "/type": [],
   "/type/0": "VerifiableCredential",
   "/type/1": "UniversityDegreeCredential",
-  "/credentialSchema": {},
   "/credentialSchema/id": "did:example:cdf:35LB7w9ueWbagPL94T9bMLtyXDj9pX5o",
   "/credentialSchema/type": "did:example:schema:22KpkXgecryx9k7N6XN1QoN3gXwBkSU8SfyyYQG",
   "/issuer": "did:example:Wz4eUg7SetGfaUVCn8U9d62oDYrUJLuUtcy619",
-  "/credentialSubject": {},
   "/credentialSubject/givenName": "Jane",
   "/credentialSubject/familyName": "Doe",
-  "/credentialSubject/degree": {},
   "/credentialSubject/degree/type": "BachelorDegree",
   "/credentialSubject/degree/name": "Bachelor of Science and Arts",
   "/credentialSubject/degree/college": "College of Engineering",
-  "/proof": {},
-  "/proof/type": "https://mattrglobal.github.io/bbs-signatures-spec/#name-sign",
+  "/proof/type": "BlsBbsSignature2020",
   "/proof/created": "2021-07-02T20:34:57Z",
   "/proof/proofPurpose": "assertionMethod",
   "/proof/verificationMethod": "did:example:Wz4eUg7SetGfaUVCn8U9d62oDYrUJLuUtcy619#test"
@@ -82,27 +106,20 @@ Normalization of each statement into stringified statements, suitable for hashin
 
 ```js
 [
-  '{"":{}}',
-  '{"/@context":[]}',
   '{"/@context/0":"https://www.w3.org/2018/credentials/v1"}',
   '{"/@context/1":"https://www.w3.org/2018/credentials/examples/v1"}',
-  '{"/credentialSchema":{}}',
   '{"/credentialSchema/id":"did:example:cdf:35LB7w9ueWbagPL94T9bMLtyXDj9pX5o"}',
   '{"/credentialSchema/type":"did:example:schema:22KpkXgecryx9k7N6XN1QoN3gXwBkSU8SfyyYQG"}',
-  '{"/credentialSubject":{}}',
-  '{"/credentialSubject/degree":{}}',
   '{"/credentialSubject/degree/college":"College of Engineering"}',
   '{"/credentialSubject/degree/name":"Bachelor of Science and Arts"}',
   '{"/credentialSubject/degree/type":"BachelorDegree"}',
   '{"/credentialSubject/familyName":"Doe"}',
   '{"/credentialSubject/givenName":"Jane"}',
   '{"/issuer":"did:example:Wz4eUg7SetGfaUVCn8U9d62oDYrUJLuUtcy619"}',
-  '{"/proof":{}}',
   '{"/proof/created":"2021-07-02T20:34:57Z"}',
   '{"/proof/proofPurpose":"assertionMethod"}',
-  '{"/proof/type":"https://mattrglobal.github.io/bbs-signatures-spec/#name-sign"}',
+  '{"/proof/type":"BlsBbsSignature2020"}',
   '{"/proof/verificationMethod":"did:example:Wz4eUg7SetGfaUVCn8U9d62oDYrUJLuUtcy619#test"}',
-  '{"/type":[]}',
   '{"/type/0":"VerifiableCredential"}',
   '{"/type/1":"UniversityDegreeCredential"}'
 ]
