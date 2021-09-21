@@ -16,12 +16,25 @@ This normalization algorithm can utilize selective disclosure and ZKP features d
   "foo": {
     "bar": "baz"
   },
-  "this": "that"
+  "this": "that",
+  "allow": [ true, 42 ]
 }
 ```
 
 The JSON pointer of the value `"baz"` is `/foo/bar`, the value at JSON Pointer `/this` is `"that"`, etc.
 
+### Canonicalized Format using JSON Pointer
+
+Any JSON object can be rewritten in pointer format. This approach provides stable algorithm for transformation of data. The above example can be canonicalized as:
+
+```json
+{
+  "/foo/bar": "baz",
+  "/this": "that",
+  "/allow/0": true,
+  "/allow/1": 42
+}
+```
 
 ## Linked Data Proofs - Canonicalization Algorithm
 
