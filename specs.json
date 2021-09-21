@@ -1,0 +1,17 @@
+{
+  "specs": [
+    {
+      "title": "BBS Signatures with JSON",
+      "spec_directory": "./spec",
+      "output_path": "./",
+      "logo": "assets/icons/json.svg",
+      "logo_link": "https://github.com/trinsic-id/json-bbs-signatures",
+      "source": {
+        "host": "github",
+        "account": "trinsic-id",
+        "repo": "json-bbs-signatures"
+      },
+      "assets": [{ "path": "assets/style.css" }]
+    }
+  ]
+}
